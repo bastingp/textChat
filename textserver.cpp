@@ -34,61 +34,67 @@ int main() {
         
 	if (user1Message == openMessage){ //user 1 connected
             sendUser.openwrite();
-            sendUser.send("User1");
-            cout << "User 1 assigned"<<endl;
-            user1Connected = true;
-            sendUser.fifoclose();
+	    if(user1Connected == false){
+            	sendUser.send("User1");
+           	cout << "User 1 assigned"<<endl;
+            	user1Connected = true;
+           	sendUser.fifoclose();
+            	recUser.fifoclose();
+
+		//user 2 connected
+            }else if(user1Connected == true && user2Connected == false){
+		sendUser.send("User2");
+		cout << "User 2 assigned"<<endl;
+		user2Connected = true;
+		sendUser.fifoclose();
+		recUser.fifoclose();
+	    }
+		//user checking status
+        } else if (user1Message == "StatCheck") {
+	    sendUser.openwrite();
+	    if (user1Connected == false){
+		sendUser.send("User 1 has left");
+	    }
+	    if (user2Connected == false){
+		sendUser.send("User 2 has left");
+	    }	
             recUser.fifoclose();
-            
-	    while (user2Connected == false){
-                recUser.openread();
-                string user2Message = recUser.recv();
-                if (user2Message == openMessage){ //user 2 connected
-                    sendUser.openwrite();
-                    sendUser.send("User2");
-                    cout << "User 2 assigned"<<endl;
-                    user2Connected = true;
-                    sendUser.fifoclose();
-                    recUser.fifoclose();
-                    //recUser.openread(); 
-                }else{
-                    user2Message ="";
-                    recUser.fifoclose();
-                }
-            }
-        } else {
-            user1Message = "";
-            recUser.fifoclose();
-        }
-        
+	    sendUser.fifoclose();
+        } else if (user1Message == user1Close ||
+			 user1Message == user2Close){
+	    user1Connected = false;
+	    user2Connected = false;
+	}        
     }
+
+    //after both users are assigned//
     cout <<"Both Users Assigned" << endl;
     char end = 'n';
     while (end != 'y'){
     	recUser.openread();
     	string userMsg = recUser.recv();
-	if (userMsg == user1Close){
+	if (userMsg == user1Close){ //user 1 closes
 	  cout << "User 1 left" << endl;
-	  sendUser.openwrite();
-	  sendUser.send("User 1 left");
 	  user1Connected = false;
 	  end = 'y';
-	}else if(userMsg == user2Close){
+	}else if(userMsg == user2Close){ //user 2 closes
 	  cout << "User 2 left" << endl;
 	  user2Connected = false;
 	  end = 'y';
-	  recUser.fifoclose();
-	  sendUser.openwrite();
-	  sendUser.send("User 2 left");
+	} else if (userMsg == "StatCheck"){ //status check
+	    sendUser.openwrite();
+	    sendUser.send("Both users connected");
 	}
-	if ((user1Connected == false) && (user2Connected == false)){
-	//recUser.fifoclose();
-	end = 'y';
+	if ((user1Connected == false) || (user2Connected == false)){
+	  end = 'y';
 	
 	}
-	//recUser.fifoclose();
+	if (userMsg == openMessage){ //prevents a third connection
+	    sendUser.openwrite();
+	    sendUser.send("full");
+	}
+	recUser.fifoclose();
     }
-    recUser.fifoclose();
   }
     return 0;
 }

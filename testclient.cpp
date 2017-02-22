@@ -35,18 +35,25 @@ int main() {
   sendfifo.fifoclose();
   //cout << "Server sent: " << reply << endl;
   
+  if(reply != "full"){
   char close = 'n';
+  string checkStatus = "StatCheck";
   while (close == 'n'){
   	cout << "Close? (y/n)" << endl;
   	cin >> close;
 	if (close == 'n'){
-	  //recfifo.openread();
-	  recfifo.recv();
+	  sendfifo.openwrite();
+	  sendfifo.send(checkStatus);
+	  recfifo.openread();
+	  string status = recfifo.recv();
+	  cout << status << endl;
+	  recfifo.fifoclose();
+	  sendfifo.fifoclose();
 	}
   }
   sendfifo.openwrite();
   endMsg = reply + ": left";
   sendfifo.send(endMsg);
   sendfifo.fifoclose();
-
+}
 }
