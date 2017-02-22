@@ -50,7 +50,8 @@ int main() {
 		recUser.fifoclose();
 	    }
 		//user checking status
-        } else if (user1Message == "StatCheck") {
+        }
+	if (user1Message == "StatCheck") {
 	    sendUser.openwrite();
 	    if (user1Connected == false){
 		sendUser.send("User 1 has left");
@@ -60,7 +61,8 @@ int main() {
 	    }	
             recUser.fifoclose();
 	    sendUser.fifoclose();
-        } else if (user1Message == user1Close ||
+        } 
+	if (user1Message == user1Close ||
 			 user1Message == user2Close){
 	    user1Connected = false;
 	    user2Connected = false;
@@ -77,11 +79,13 @@ int main() {
 	  cout << "User 1 left" << endl;
 	  user1Connected = false;
 	  end = 'y';
-	}else if(userMsg == user2Close){ //user 2 closes
+	}
+	if(userMsg == user2Close){ //user 2 closes
 	  cout << "User 2 left" << endl;
 	  user2Connected = false;
 	  end = 'y';
-	} else if (userMsg == "StatCheck"){ //status check
+	}
+	if (userMsg == "StatCheck"){ //status check
 	    sendUser.openwrite();
 	    sendUser.send("Both users connected");
 	}
