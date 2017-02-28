@@ -40,16 +40,17 @@ int main() {
 	Fifo sendUser2(send2_fifo);
 
 	string openMessage = "$CONNECT*"; //message sent when connection starts
-	string user1Assign = "$USER*USER1%"; //assigns connector to user 1
-	string user2Assign = "$USER*USER2%"; //assigns connector to user 2
-	string user1Close = "$USER1:LEFT*"; //message received when user1 leaves
-	string user2Close = "$USER2:LEFT*"; //message received when user2 leaves
-	string user1Update = "$USER1:UPDATE*"; //request for user1 message update
-	string user2Update = "$USER2:UPDATE*"; //request for user2 message update
-	string recMessage = "$MESSAGE*"; //flag to indicate a message for text chat
-	string endMsg = "$/MESSAGE*"; //indicates end of messages
+	string user1Assign = "$USER%USER1*"; //assigns connector to user 1
+	string user2Assign = "$USER%USER2*"; //assigns connector to user 2
+	string user1Close = "$UNLOAD%USER1*"; //message received when user1 leaves
+	string user2Close = "$UNLOAD%USER2*"; //message received when user2 leaves
+	string user1Update = "$UPDATE%USER1*"; //request for user1 message update
+	string user2Update = "$UPDATE%USER2*"; //request for user2 message update
+	string user1Message = "$MESSAGE%USER1%"; //flag to indicate a message from user 1 for text chat
+	string user2Message = "$MESSAGE%USER2%"; //flag to induicate a message from user 2 for text chat
+	//string endMsg = "*"; //indicates end of messages
 	string upToDate = "$UPTODATE*"; //sent when there is nothing to update
-	string userMissingMsg = "Waiting on a new user to connect";  //change to $WAIT* ////////////////////////////// 
+	string userMissingMsg = "$WAIT*";  //change to $WAIT* ////////////////////////////// 
 		//message sent to update user if other user left
 
 	string userMsg; //Message received from user
@@ -95,10 +96,13 @@ int main() {
 		//after both users connect
 		cout <<"Both users connected" << endl;
 		char end = 'n'; //used to return to 'find users' loop
-		while (end != 'y'){
+		while (end != 'y' && user1Connect == true && user2Connect == true){
 			recUser.openread();
 			recUser.openread();
 			userMsg = recUser.recv();
+			//if(user2Connect == false){
+			//	break;
+			//}
 			//looks for 'disconnect' messages//
 			if(userMsg == user1Close){ //checks if user 1 leaves
 				cout << "user 1 left" << endl;
@@ -110,7 +114,7 @@ int main() {
 			}
 
 			//Receives messages//
-			if(userMsg.find(recMessage) != string::npos){
+			if(userMsg.find(user1Message) != string::npos){
 				msgLog.push_back(userMsg);
 			}
 
@@ -129,7 +133,7 @@ int main() {
 						sendUser.send(x); 
 						sentMsg1.push_back(x);
 					}
-					sendUser.send(endMsg);
+					sendUser.send(upToDate);
 				}else{
 					sendUser.openwrite();
 					sendUser.send(upToDate); //sends if there are no changes
@@ -149,7 +153,7 @@ int main() {
 			}
 
 			//Receives messages//
-			if(userMsg.find(recMessage) != string::npos){
+			if(userMsg.find(user2Message) != string::npos){
 				msgLog.push_back(userMsg);
 			}
 			if(userMsg == user2Update){
@@ -165,7 +169,7 @@ int main() {
 						sendUser2.send(x);
 						sentMsg2.push_back(x);
 					}
-					sendUser2.send(endMsg);
+					sendUser2.send(upToDate);
 				}else{
 					sendUser2.send(upToDate);
 				}

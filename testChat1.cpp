@@ -19,7 +19,7 @@ int main(){
 	string userNumber;
 
 	connect = "$CONNECT*";
-	message = "$MESSAGE*";
+	message = "$MESSAGE%";
 
 	cout << "Send: "<< connect << endl;
 	sendfifo.openwrite();
@@ -31,16 +31,16 @@ int main(){
 	recfifo.fifoclose();
 	sendfifo.fifoclose();
 
-	if (recMsg == "$USER*USER1%"){
+	if (recMsg == "$USER%USER1*"){
 		userNumber = "1";
 	}
-	if (recMsg == "$USER*USER2%"){
+	if (recMsg == "$USER%USER2*"){
 		userNumber = "2";
 	}
 
 	cout << "Assigned to: User " << userNumber << endl;
 	if (userNumber == "1"){
-		update = "$USER"+userNumber+":UPDATE*";
+		update = "$UPDATE%USER"+userNumber+"*";
 		char choice;
 		cout << "update or send message (u/s)" << endl;
 		cin >> choice;
@@ -51,17 +51,17 @@ int main(){
 				cout << "type message: "<< endl;
 				//cin >> chat;
 				getline(cin, chat);
-				chat = message +"User"+userNumber+":"+chat;
+				chat = message +"USER"+userNumber+"%"+chat+"*";
 				sendfifo.send(chat);
 				sendfifo.send(update);
 				string chatRec;
 
 				recfifo.openread();
 		
-				while (chatRec != "$/MESSAGE*"){
+				while (chatRec != "$UPTODATE*"){
 					chatRec = recfifo.recv();
-					if(chatRec != "$/MESSAGE*"){
-						chatRec.erase(0,9);
+					if(chatRec != "$UPTODATE*"){
+						//chatRec.erase(0,9);
 						cout << "chat received: " << chatRec << endl;
 					} 
 				}
@@ -77,16 +77,16 @@ int main(){
 				//cout << "SENT" << endl;
 				recfifo.openread();
 				string chatRec;
-				while (chatRec != "$/MESSAGE*"){
+				while (chatRec != "$UPTODATE*"){
 					chatRec = recfifo.recv();
 					//cout <<"updating..."<<endl;
-					if (chatRec != "$/MESSAGE*" && chatRec != "$UPTODATE*"){
-						chatRec.erase(0,9);
+					if (chatRec != "$UPTODATE*"){
+						//chatRec.erase(0,9);
 						cout << "chat received: " << chatRec << endl;
 					}
-					if (chatRec == "$UPTODATE*"){
-						chatRec = "$/MESSAGE*";
-					}
+					//if (chatRec == "$UPTODATE*"){
+					//	chatRec = "$/MESSAGE*";
+					//}
 				}
 				recfifo.fifoclose();
 				sendfifo.fifoclose();
@@ -95,7 +95,7 @@ int main(){
 			}
 		}
 		sendfifo.fifoclose();
-		disconnect = "$USER"+userNumber+":LEFT*";
+		disconnect = "$UNLOAD%USER"+userNumber+"*";
 		char quit;
 		cout << "Quit?"<< endl;
 		cin >> quit;
@@ -105,7 +105,7 @@ int main(){
 	}
 
 if (userNumber == "2"){
-	update = "$USER"+userNumber+":UPDATE*";
+	update = "$UPDATE%USER"+userNumber+"*";
 		char choice;
 		cout << "update or send message (u/s)" << endl;
 		cin >> choice;
@@ -116,17 +116,17 @@ if (userNumber == "2"){
 				cout << "type message: "<< endl;
 				//cin >> chat;
 				getline(cin, chat);
-				chat = message +"User"+userNumber+":"+chat;
+				chat = message +"USER"+userNumber+"%"+chat;
 				sendfifo2.send(chat);
 				sendfifo2.send(update);
 				string chatRec;
 
 				recfifo2.openread();
 		
-				while (chatRec != "$/MESSAGE*"){
+				while (chatRec != "$UPTODATE*"){
 					chatRec = recfifo2.recv();
-					if(chatRec != "$/MESSAGE*"){
-						chatRec.erase(0,9);
+					if(chatRec != "$UPTODATE*"){
+						//chatRec.erase(0,9);
 						cout << "chat received: " << chatRec << endl;
 					} 
 				}
@@ -135,31 +135,33 @@ if (userNumber == "2"){
 			}
 		}
 		if (choice == 'u'){
-			while(1){
+			int var = 0;
+			while(var < 10){
 				sendfifo2.openwrite();
 				//cout << "UPDATE"<< endl;
 				sendfifo2.send(update);
 				//cout << "SENT" << endl;
 				recfifo2.openread();
 				string chatRec;
-				while (chatRec != "$/MESSAGE*"){
+				while (chatRec != "$UPTODATE*"){
 					chatRec = recfifo2.recv();
-					if (chatRec != "$/MESSAGE*" && chatRec != "$UPTODATE*"){
-						chatRec.erase(0,9);
+					if (chatRec != "$UPTODATE*"){
+						//chatRec.erase(0,9);
 						cout << "chat received: " << chatRec << endl;
 					}
-					if (chatRec == "$UPTODATE*"){
-						chatRec = "$/MESSAGE*";
-					}
+					//if (chatRec == "$UPTODATE*"){
+					//	chatRec = "$/MESSAGE*";
+					//}
 				}
 				recfifo2.fifoclose();
 				sendfifo2.fifoclose();
 				//cout << "update? (y/n)" << endl;
 				//cin >> x;
+				var++;
 			}
 		}
-		sendfifo2.fifoclose();
-		disconnect = "$USER"+userNumber+":LEFT*";
+		//sendfifo2.fifoclose();
+		disconnect = "$UNLOAD%USER"+userNumber+"*";
 		char quit;
 		cout << "Quit?"<< endl;
 		cin >> quit;
