@@ -29,6 +29,51 @@ void assignUser(Fifo rec, Fifo send, bool& user1Con, bool& user2Con, string assi
 		 
 }
 
+void processMessages(Fifo rec, Fifo send, string update, string message, string close, 
+					 bool& connect, vector<string>& log, vector<string>& usr1Log, vector<string>& usr2Log, char& end){
+
+	string upToDate = "$UPTODATE*";
+	rec.openread();
+	rec.openread();
+	string userMsg = rec.recv();
+	cout << userMsg << endl;
+	if(userMsg == close){ //if user disconnects
+		cout << "User Sent:" << userMsg << endl;
+		connect = false;
+		//clears message logs
+		log.clear();
+		usr1Log.clear();
+		usr2Log.clear();
+		end = 'y';
+	}
+
+	//if user sends a message//
+	if(userMsg.find(message) != string::npos){
+		log.push_back(userMsg); //adds message to message log
+	}
+
+	//if user sends an update request//
+	if(userMsg == update){
+		cout << "Updating User" << endl;
+		if (log.size() > usr1Log.size()){ //checks if new messages have arrived
+			int dif = (log.size() - usr1Log.size());
+			int index = (log.size() -1);
+			dif--;
+			for (dif; dif >= 0; dif--){ //sends new messages
+				string x = log[index - dif];
+				cout << "Text sent:"<< x << endl;
+				send.openwrite();
+				send.send(x);
+				usr1Log.push_back(x);
+			}
+			send.send(upToDate); //message indicates no more new messages
+		}else{
+			send.openwrite();
+			send.send(upToDate); //sends if no new messages
+		}
+	}
+}
+
 
 int main() {
 
@@ -64,6 +109,7 @@ int main() {
 	while (1){ //keeps server running
 		
 		//Find Users//
+		cout << "finding users" << endl;
 		while ((user1Connect == false) || (user2Connect == false)){
 			recUser.openread();
 			userMsg = recUser.recv();
@@ -97,83 +143,50 @@ int main() {
 		cout <<"Both users connected" << endl;
 		char end = 'n'; //used to return to 'find users' loop
 		while (end != 'y'){
-			recUser.openread();
-			recUser.openread();
-			userMsg = recUser.recv();
-			//if(user2Connect == false){
-			//	break;
-			//}
-			//looks for 'disconnect' messages//
-			if(userMsg == user1Close){ //checks if user 1 leaves
-				cout << "user 1 left" << endl;
-				user1Connect = false;
-				msgLog.clear();
-				sentMsg1.clear();
-				sentMsg2.clear();
-				end = 'y';
-			}
+			cout << "USER1_TURN"<< endl;
+			processMessages(recUser, sendUser, user1Update, user1Message, user1Close, user1Connect, msgLog, sentMsg1, sentMsg2, end);
 
-			//Receives messages//
-			if(userMsg.find(user1Message) != string::npos){
-				msgLog.push_back(userMsg);
-			}
-
-			//updates users chatroom//
-			if(userMsg == user1Update){
-				//finds and returns new messages//
-				cout << "updating user 1" << endl;
-				if (msgLog.size() > sentMsg1.size()){
-					int dif = (msgLog.size() - sentMsg1.size());
-					int index = (msgLog.size() - 1);
-					dif--;
-					for (dif; dif >= 0; dif--){
-						string x = msgLog[index - dif];
-						cout <<"Text sent:"<< x << endl;
-						sendUser.openwrite();
-						sendUser.send(x); 
-						sentMsg1.push_back(x);
-					}
-					sendUser.send(upToDate);
-				}else{
-					sendUser.openwrite();
-					sendUser.send(upToDate); //sends if there are no changes
-				}
-			}
-			
-			recUser2.openread();
-			userMsg = recUser2.recv();
-			//looks for 'disconnect' messages//
-			if(userMsg == user2Close){ //checks if user 2 leaves
-				cout << "user 2 left" << endl;
-				user2Connect = false;
-				msgLog.clear();
-				sentMsg1.clear();
-				sentMsg2.clear();
-				end = 'y';
+			if(end == 'y'){
 				break;
 			}
+			cout << "USER2_TURN"<< endl;
+			processMessages(recUser2, sendUser2, user2Update, user2Message, user2Close, user2Connect, msgLog, sentMsg2, sentMsg1, end);
+			cout << "end =" << end << endl;
+			// recUser2.openread();
+			// recUser2.openread();
+			// userMsg = recUser2.recv();
+			// //looks for 'disconnect' messages//
+			// if(userMsg == user2Close){ //checks if user 2 leaves
+			// 	cout << "user 2 left" << endl;
+			// 	user2Connect = false;
+			// 	msgLog.clear();
+			// 	sentMsg1.clear();
+			// 	sentMsg2.clear();
+			// 	end = 'y';
+			// 	break;
+			// }
 
-			//Receives messages//
-			if(userMsg.find(user2Message) != string::npos){
-				msgLog.push_back(userMsg);
-			}
-			if(userMsg == user2Update){
-				cout << "Updating user 2" << endl;
-				sendUser2.openwrite();
-				if (msgLog.size() > sentMsg2.size()){
-					int dif = (msgLog.size() - sentMsg2.size());
-					int index = (msgLog.size() - 1);
-					dif--;
-					for (dif; dif >= 0; dif--){
-						string x = msgLog[index - dif];
-						cout <<"Text sent:"<< x << endl;
-						sendUser2.send(x);
-						sentMsg2.push_back(x);
-					}
-					sendUser2.send(upToDate);
-				}else{
-					sendUser2.send(upToDate);
-				}
+			// //Receives messages//
+			// if(userMsg.find(user2Message) != string::npos){
+			// 	msgLog.push_back(userMsg);
+			// }
+			// if(userMsg == user2Update){
+			// 	cout << "Updating user 2" << endl;
+			// 	sendUser2.openwrite();
+			// 	if (msgLog.size() > sentMsg2.size()){
+			// 		int dif = (msgLog.size() - sentMsg2.size());
+			// 		int index = (msgLog.size() - 1);
+			// 		dif--;
+			// 		for (dif; dif >= 0; dif--){
+			// 			string x = msgLog[index - dif];
+			// 			cout <<"Text sent:"<< x << endl;
+			// 			sendUser2.send(x);
+			// 			sentMsg2.push_back(x);
+			// 		}
+			// 		sendUser2.send(upToDate);
+			// 	}else{
+			// 		sendUser2.send(upToDate);
+			// 	}
 
 		}
 		sendUser.fifoclose();
@@ -182,4 +195,3 @@ int main() {
 		recUser2.fifoclose();
 	}
 } //main
-}

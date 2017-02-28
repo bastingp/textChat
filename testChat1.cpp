@@ -134,6 +134,7 @@ if (userNumber == "2"){
 				sendfifo2.fifoclose();
 			}
 		}
+		disconnect = "$UNLOAD%USER"+userNumber+"*";
 		if (choice == 'u'){
 			int var = 0;
 			while(var < 10){
@@ -159,14 +160,23 @@ if (userNumber == "2"){
 				//cin >> x;
 				var++;
 			}
+			sendfifo2.openwrite();
+			sendfifo2.send(disconnect);
+			sendfifo2.fifoclose();
+
 		}
 		//sendfifo2.fifoclose();
-		disconnect = "$UNLOAD%USER"+userNumber+"*";
+		//disconnect = "$UNLOAD%USER"+userNumber+"*";
 		char quit;
-		cout << "Quit?"<< endl;
-		cin >> quit;
-		sendfifo2.openwrite();
-		sendfifo2.send(disconnect);
-		sendfifo2.fifoclose();
+
+		//cout << "Quit?"<< endl;
+		//cin >> quit;
+		//sendfifo2.openwrite();
+		//sendfifo2.send(disconnect);
+		//cout<<"quit?"<<endl;
+		//cin >> quit;
+		//sendfifo2.fifoclose();
+		//cout<<"quit?"<<endl;
+		//cin >> quit;
 	}
 }
