@@ -1,13 +1,12 @@
 var username;
 var XMLHttp;
 var strangers_messages = [];
-var serverFull;
 
 // Things to do at page load
 function pageInit() 
 {
 	setXMLHttp();
-	getUsername();
+	//getUsername();
 }
 
 function setXMLHttp()
@@ -24,16 +23,19 @@ function setXMLHttp()
 function getUsername()
 {
 	var loadMessage = "$LOAD";
-	username = callCGI(loadMessage);
+	callCGI(loadMessage);
 }
 
-function serverIsFull()
+function checkStrangerMessages()
 {
-	
+	var updateMessage = "$UPDATE%" + username + "*";
+	callCGI(updateMessage);
 }
+//setInterval(function(){ checkStrangerMessages()}, 1000)
+
 
 // Respond to send button
-function addText() 
+function sendMessage() 
 {
     // Get the text from the text box
     var inText = document.chatForm.textInput.value;
@@ -43,17 +45,10 @@ function addText()
 	
 	// Clear the input text
     document.chatForm.textInput.value = "";    
-	updateChatBox(inText, username);
+	var cgiMessage = "$MESSAGE%" + username + '%' + inText + '*';
+	callCGI(cgiMessage);
+	updateChatBox(inText, "You");
 }
-
-
-// function updateStrangerMessages()
-// {
-	// var updateMessage = "*" + username + "$UPDATE";
-	// // var serverMessages = callCGI(updateMessage);
-	
-	// updateChatBox(serverMessages, "Stranger");
-// }
 
 function updateChatBox(messages, user)
 {	
@@ -82,15 +77,111 @@ function updateScroll()
 }
 
 function callCGI(CGIMessage)
-{
+{	
 	XMLHttp.open("GET", "/cgi-bin/schutzj_java_test_fetchajax.cgi?"
 						 + "&input=" + CGIMessage
 						 ,true);
     XMLHttp.onreadystatechange=function() 
 	{
-		if(XMLHTttp.readyState == 4)
+		if(XMLHttp.readyState == 4)
 		{
-			return XMLHttp.responseText;
+			var response = XMLHttp.responseText;
+			parseResponse(response);
 		}
 	}
+	XMLHttp.send(null);
+}
+
+function parseResponse(response)
+{
+	var user = "USER";
+	var message = "MESSAGE";
+	var uptodate = "UPTODATE";
+	var update = "UPDATE";
+	
+	var i = 0;
+	//move index to beginning of message
+	while(response[i] != '$')
+	{
+		i++;
+	}
+	
+	//move index to first character of message (past '$')
+	i++;
+	var temp = '';
+	while(i < response.length)
+	{
+		if(response[i] == '%' || response[i] == '*')
+		{
+			break;
+		}
+		temp += response[i];
+		i++;
+	}
+	
+	i++;
+	//figure out what to do with message
+	if(temp == user)
+	{
+		assignUsername(response, i);
+	}
+	else if(temp == message)
+	{
+		//If message, should already be printed locally
+		return;
+	}
+	else if(temp == uptodate)
+	{
+		//If up to date, do nothing
+		return;
+	}
+	else if(temp == update)
+	{
+		updateStrangerMessages(response, i);
+	}
+}
+
+function assignUsername(response, startingIndex)
+{
+	var i = startingIndex;
+	username = '';
+	while(i < response.length)
+	{
+		if(response[i] == '*')
+		{
+			break;
+		}
+		username += response[i];
+		i++;
+	}
+}
+
+function updateStrangerMessages(response, startingIndex)
+{
+	var i = startingIndex;
+	temp = '';
+	new_messages = [];
+	while(i < response.length)
+	{
+		if(response[i] == '*')
+		{
+			strangers_messages.push(temp);
+			new_messages.push(temp);
+			break;
+		}
+		else if(response[i] == '%')
+		{
+			strangers_messages.push(temp);
+			new_messages.push(temp);
+			temp = "";
+		}
+		else
+		{
+			temp += response[i];
+		}
+		i++;
+	}
+	
+	//Only output new messages
+	updateChatBox(new_messages, "Stranger");
 }
