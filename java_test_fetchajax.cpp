@@ -22,15 +22,65 @@ using namespace cgicc; // Needed for AJAX functions.
 string receive_fifo = "chatRequest";
 string send_fifo = "chatReply";
 
-int main() 
+// string get_dummy_messages()
+// {
+	// string dummy_messages = "$UPDATE";
+	
+	// for(int i = 0; i < 5; i++)
+	// {
+		// dummy_messages += "%this is a dummy message";
+	// }
+	
+	// dummy_messages += "*";
+	// return dummy_messages;
+// }
+
+string get_parsed_message(string message)
 {
+	string str = "$MESSAGE%";
+	int i = 0;
+	//go past $
+	while(message[i] != '$')
+	{
+		i++;
+	}
+	i++;
+	//go past MESSAGE%
+	while(message[i] != '%')
+	{
+		i++;
+	}
+	i++;
+	//go past username%
+	while(message[i] != '%')
+	{
+		i++;
+	}
+	i++;
+	//copy the message
+	while(message[i] != '*')
+	{
+		str += message[i];
+		i++;
+	}
+	str += '*';	
+	return str;
+}
+
+int main() 
+{	
 	Cgicc cgi;    // Ajax object
 	char *cstr;
 	// Create AJAX objects to recieve information from web page.
 	form_iterator user_input = cgi.getElement("input");
 	
-	cout << "Content-Type: text/plain\n\n";
-	cout << "user1";
+	//Make sure user_input refers to a valid element
+	if(user_input != cgi.getElements().end())
+	{
+		string message = **user_input;
+		cout << "Content-Type: text/plain\n\n";
+		cout << get_parsed_message(message);
+	}
 	
 	// // create the FIFOs for communication
 	// Fifo recfifo(receive_fifo);
