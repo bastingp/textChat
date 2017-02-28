@@ -96,7 +96,7 @@ int main() {
 		//after both users connect
 		cout <<"Both users connected" << endl;
 		char end = 'n'; //used to return to 'find users' loop
-		while (end != 'y' && user1Connect == true && user2Connect == true){
+		while (end != 'y'){
 			recUser.openread();
 			recUser.openread();
 			userMsg = recUser.recv();
@@ -106,11 +106,11 @@ int main() {
 			//looks for 'disconnect' messages//
 			if(userMsg == user1Close){ //checks if user 1 leaves
 				cout << "user 1 left" << endl;
-				user1Connect == false;
+				user1Connect = false;
 				msgLog.clear();
 				sentMsg1.clear();
 				sentMsg2.clear();
-				end == 'y';
+				end = 'y';
 			}
 
 			//Receives messages//
@@ -145,11 +145,12 @@ int main() {
 			//looks for 'disconnect' messages//
 			if(userMsg == user2Close){ //checks if user 2 leaves
 				cout << "user 2 left" << endl;
-				user2Connect == false;
+				user2Connect = false;
 				msgLog.clear();
 				sentMsg1.clear();
 				sentMsg2.clear();
-				end == 'y';
+				end = 'y';
+				break;
 			}
 
 			//Receives messages//
