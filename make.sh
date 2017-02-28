@@ -1,7 +1,7 @@
 #!/bin/bash
 
-g++ -c testclient.cpp
-g++ -o testclient fifo.o testclient.o
+g++ -c testChat.cpp
+g++ -o testChat fifo.o testChat.o
 
-g++ -c textserver.cpp
-g++ -o textserver fifo.o textserver.o
+g++ -c chatServer.cpp
+g++ -o chatServer fifo.o chatServer.o
