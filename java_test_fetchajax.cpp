@@ -29,6 +29,7 @@ int main()
 	// Create AJAX objects to recieve information from web page.
 	form_iterator user_input = cgi.getElement("input");
 	
+	cout << "Content-Type: text/plain\n\n";
 	cout << "user1";
 	
 	// // create the FIFOs for communication

@@ -1,6 +1,7 @@
 var username;
 var XMLHttp;
 var strangers_messages = [];
+var serverFull;
 
 // Things to do at page load
 function pageInit() 
@@ -26,6 +27,11 @@ function getUsername()
 	username = callCGI(loadMessage);
 }
 
+function serverIsFull()
+{
+	
+}
+
 // Respond to send button
 function addText() 
 {
@@ -34,24 +40,23 @@ function addText()
     
     // Make sure something is there
     if (inText.length < 1) return;
-    
+	
+	// Clear the input text
+    document.chatForm.textInput.value = "";    
 	updateChatBox(inText, username);
 }
 
 
-function updateStrangerMessages()
-{
-	var updateMessage = "*" + username + "$UPDATE";
-	// var serverMessages = callCGI(updateMessage);
+// function updateStrangerMessages()
+// {
+	// var updateMessage = "*" + username + "$UPDATE";
+	// // var serverMessages = callCGI(updateMessage);
 	
-	updateChatBox(serverMessages, "Stranger");
-}
+	// updateChatBox(serverMessages, "Stranger");
+// }
 
 function updateChatBox(messages, user)
-{
-	// Clear the input text
-    document.chatForm.textInput.value = "";
-	
+{	
 	//Check if messages is an array, then add all messages to bottom of chatbox
 	if(messages.constructor == Array)
 	{
@@ -79,7 +84,7 @@ function updateScroll()
 function callCGI(CGIMessage)
 {
 	XMLHttp.open("GET", "/cgi-bin/schutzj_java_test_fetchajax.cgi?"
-						 + "&message=" + CGIMessage
+						 + "&input=" + CGIMessage
 						 ,true);
     XMLHttp.onreadystatechange=function() 
 	{
