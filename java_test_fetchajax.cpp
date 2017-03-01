@@ -22,50 +22,8 @@ using namespace cgicc; // Needed for AJAX functions.
 string receive_fifo = "chatRequest";
 string send_fifo = "chatReply";
 
-// string get_dummy_messages()
-// {
-	// string dummy_messages = "$UPDATE";
-	
-	// for(int i = 0; i < 5; i++)
-	// {
-		// dummy_messages += "%this is a dummy message";
-	// }
-	
-	// dummy_messages += "*";
-	// return dummy_messages;
-// }
-
-string get_parsed_message(string message)
-{
-	string str = "$MESSAGE%";
-	int i = 0;
-	//go past $
-	while(message[i] != '$')
-	{
-		i++;
-	}
-	i++;
-	//go past MESSAGE%
-	while(message[i] != '%')
-	{
-		i++;
-	}
-	i++;
-	//go past username%
-	while(message[i] != '%')
-	{
-		i++;
-	}
-	i++;
-	//copy the message
-	while(message[i] != '*')
-	{
-		str += message[i];
-		i++;
-	}
-	str += '*';	
-	return str;
-}
+bool requires_receive(string message, bool& asked_to_update);
+string get_command(string message);
 
 int main() 
 {	
@@ -78,27 +36,84 @@ int main()
 	if(user_input != cgi.getElements().end())
 	{
 		string message = **user_input;
+		bool asked_to_update;
+		bool need_to_listen = requires_receive(message, asked_to_update);
+		
+		cout << "Send:" << message << endl;
+		sendfifo.openwrite();
+		sendfifo.send(message);
+		if(need_to_listen)
+		{
+			recfifo.openread();
+			//update sends multiple strings, so deal with it differently
+			if(asked_to_update)
+			{
+				string all_replies;
+				reply = recfifo.recv();
+				while(reply.find("$END") > 0)
+				{
+					all_replies += "%" + reply;
+					if(reply == "$UPTODATE*")
+					{
+						break;
+					}
+					reply = recfifo.recv();
+				}
+				
+				reply = all_replies;
+			}
+			else
+			{
+				cout << "\nGoing to open read fifo...\n";
+				recfifo.openread();
+				reply = recfifo.recv();
+			}
+			
+			recfifo.fifoclose();
+			cout << reply;
+		}
+		sendfifo.fifoclose();
+		
 		cout << "Content-Type: text/plain\n\n";
-		cout << get_parsed_message(message);
 	}
 	
-	// // create the FIFOs for communication
-	// Fifo recfifo(receive_fifo);
-	// Fifo sendfifo(send_fifo);
-	
-	// // // Call server to get results
-	// string message = **input;
-	// sendfifo.openwrite();
-	// sendfifo.send(message);
-	
-	// /* Get a message from a server */
-	// cout << "Content-Type: text/plain\n\n";
-	// recfifo.openread();
-	// string reply = recfifo.recv();
-	// cout << reply;
-	
-	// recfifo.fifoclose();
-	// sendfifo.fifoclose();
-	
 	return 0;
+}
+
+bool requires_receive(string message, bool& asked_to_update)
+{
+	const string load_command = "LOAD";
+	const string update_command = "UPDATE";
+	const string status_command = "STATUS";
+	
+	string command = get_command(message);
+
+	if(command == update_command)
+		asked_to_update = true;
+	else
+		asked_to_update = false;
+	
+	return (command == load_command || command == update_command || command == status_command);
+}
+
+string get_command(string message)
+{	
+	int index = 0;
+	string command = "";
+	
+	//go past $
+	while(message[index] != '$')
+	{
+		index++;
+	}
+	index++;
+	//go past MESSAGE%
+	while(message[index] != '%')
+	{
+		command += message[index];
+		index++;
+	}
+	index++;
+	
+	return command;
 }

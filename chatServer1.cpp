@@ -32,9 +32,53 @@ void assignUser(Fifo rec, Fifo send, bool& user1Con, bool& user2Con, string assi
 void processMessages(Fifo rec, Fifo send, string update, string message, string close, 
 					 bool& connect, vector<string>& log, vector<string>& usr1Log, vector<string>& usr2Log, char& end){
 
+	// string upToDate = "$UPTODATE*";
+	// rec.openread();
+	// rec.openread();
+	// string userMsg = rec.recv();
+	// cout << userMsg << endl;
+	// if(userMsg == close){ //if user disconnects
+		// cout << "User Sent:" << userMsg << endl;
+		// connect = false;
+		// //clears message logs
+		// log.clear();
+		// usr1Log.clear();
+		// usr2Log.clear();
+		// end = 'y';
+	// }
+
+	// //if user sends a message//
+	// if(userMsg.find(message) != string::npos){
+		// log.push_back(userMsg); //adds message to message log
+	// }
+
+	// //if user sends an update request//
+	// if(userMsg == update){
+		// cout << "Updating User" << endl;
+		// if (log.size() > usr1Log.size()){ //checks if new messages have arrived
+			// int dif = (log.size() - usr1Log.size());
+			// int index = (log.size() -1);
+			// dif--;
+			// for (dif; dif >= 0; dif--){ //sends new messages
+				// string x = log[index - dif];
+				// cout << "Text sent:"<< x << endl;
+				// send.openwrite();
+				// send.send(x);
+				// usr1Log.push_back(x);
+			// }
+			// send.send(upToDate); //message indicates no more new messages
+		// }else{
+			// send.openwrite();
+			// send.send(upToDate); //sends if no new messages
+		// }
+	// }
+	
 	string upToDate = "$UPTODATE*";
+	
+	/*Open fifos*/
+	send.openwrite();
 	rec.openread();
-	rec.openread();
+	
 	string userMsg = rec.recv();
 	cout << userMsg << endl;
 	if(userMsg == close){ //if user disconnects
@@ -72,6 +116,9 @@ void processMessages(Fifo rec, Fifo send, string update, string message, string 
 			send.send(upToDate); //sends if no new messages
 		}
 	}
+	
+	rec.fifoclose();
+	send.fifoclose();
 }
 
 
@@ -84,18 +131,18 @@ int main() {
 	Fifo recUser2(rec2_fifo);
 	Fifo sendUser2(send2_fifo);
 
-	string openMessage = "$CONNECT*"; //message sent when connection starts
-	string user1Assign = "$USER%USER1*"; //assigns connector to user 1
-	string user2Assign = "$USER%USER2*"; //assigns connector to user 2
-	string user1Close = "$UNLOAD%USER1*"; //message received when user1 leaves
-	string user2Close = "$UNLOAD%USER2*"; //message received when user2 leaves
-	string user1Update = "$UPDATE%USER1*"; //request for user1 message update
-	string user2Update = "$UPDATE%USER2*"; //request for user2 message update
-	string user1Message = "$MESSAGE%USER1%"; //flag to indicate a message from user 1 for text chat
-	string user2Message = "$MESSAGE%USER2%"; //flag to induicate a message from user 2 for text chat
+	const string openMessage = "$CONNECT*"; //message sent when connection starts
+	const string user1Assign = "$USER%USER1*"; //assigns connector to user 1
+	const string user2Assign = "$USER%USER2*"; //assigns connector to user 2
+	const string user1Close = "$UNLOAD%USER1*"; //message received when user1 leaves
+	const string user2Close = "$UNLOAD%USER2*"; //message received when user2 leaves
+	const string user1Update = "$UPDATE%USER1*"; //request for user1 message update
+	const string user2Update = "$UPDATE%USER2*"; //request for user2 message update
+	const string user1Message = "$MESSAGE%USER1%"; //flag to indicate a message from user 1 for text chat
+	const string user2Message = "$MESSAGE%USER2%"; //flag to induicate a message from user 2 for text chat
 	//string endMsg = "*"; //indicates end of messages
-	string upToDate = "$UPTODATE*"; //sent when there is nothing to update
-	string userMissingMsg = "$WAIT*";  //change to $WAIT* ////////////////////////////// 
+	const string upToDate = "$UPTODATE*"; //sent when there is nothing to update
+	const string userMissingMsg = "$WAIT*";  //change to $WAIT* ////////////////////////////// 
 		//message sent to update user if other user left
 
 	string userMsg; //Message received from user
@@ -103,14 +150,14 @@ int main() {
 	vector<string> sentMsg1; //messages sent to user 1
 	vector<string> sentMsg2; //messages sent to user 2
 
-	recUser.openread(); //opens receiving fifo
 
-
-	while (1){ //keeps server running
-		
+	//keeps server running
+	while (1)
+	{ 
 		//Find Users//
 		cout << "finding users" << endl;
-		while ((user1Connect == false) || (user2Connect == false)){
+		while ((user1Connect == false) || (user2Connect == false))
+		{
 			recUser.openread();
 			userMsg = recUser.recv();
 
