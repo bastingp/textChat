@@ -70,11 +70,11 @@ int main()
 			}
 			
 			recfifo.fifoclose();
+			cout << "Content-Type: text/plain\n\n";
 			cout << reply;
 		}
 		sendfifo.fifoclose();
 		
-		cout << "Content-Type: text/plain\n\n";
 	}
 	
 	return 0;
